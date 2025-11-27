@@ -3,7 +3,7 @@ members = ["crates/*", "datasources/*", "decoders/*", "examples/*", "metrics/*"]
 resolver = "2"
 
 [workspace.package]
-rust-version = "1.82"
+# rust-version = "1.82"
 version = "0.11.0"
 edition = "2021"
 license = "MIT"
@@ -142,6 +142,7 @@ serde_json = "1.0.138"
 sha2 = "0.10.8"
 
 # solana
+agave-reserved-account-keys = "3.0"
 solana-account = "3.0.0"
 solana-account-decoder = "^3.0.5"
 solana-account-decoder-client-types = "^3.0.3"

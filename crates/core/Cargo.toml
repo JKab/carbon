@@ -16,6 +16,7 @@ postgres = ["sqlx", "num-traits", "sqlx_migrator"]
 graphql = ["juniper", "axum", "juniper_axum"]
 
 [dependencies]
+agave-reserved-account-keys = { workspace = true }
 solana-account = { workspace = true }
 solana-hash = { workspace = true }
 solana-instruction = { workspace = true, default-features = false }

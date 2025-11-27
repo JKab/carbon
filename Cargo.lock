@@ -1081,6 +1081,7 @@ dependencies = [
 name = "carbon-core"
 version = "0.11.0"
 dependencies = [
+ "agave-reserved-account-keys 3.0.8",
  "async-trait",
  "axum",
  "base64 0.22.1",

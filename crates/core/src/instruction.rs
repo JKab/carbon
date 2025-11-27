@@ -446,8 +446,12 @@ impl UnsafeNestedBuilder {
         for (metadata, instruction) in instructions {
             let stack_height = metadata.stack_height as usize;
 
-            assert!(stack_height > 0);
-            assert!(stack_height <= MAX_INSTRUCTION_STACK_DEPTH);
+            if stack_height == 0 || stack_height > MAX_INSTRUCTION_STACK_DEPTH {
+                log::error!(
+                    "Instruction with invalid stack height: {stack_height}. Skipping."
+                );
+                continue;
+            }
 
             for ptr in &mut self.level_ptrs[stack_height..] {
                 *ptr = None;

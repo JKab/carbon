@@ -31,16 +31,16 @@ use {
     },
     solana_instruction::AccountMeta,
     solana_message::{
-        compiled_instruction::CompiledInstruction, v0::LoadedAddresses, VersionedMessage,
+        compiled_instruction::CompiledInstruction, v0::{LoadedAddresses, LoadedMessage}, VersionedMessage,
     },
+    agave_reserved_account_keys::ReservedAccountKeys,
     solana_pubkey::Pubkey,
     solana_transaction_context::TransactionReturnData,
     solana_transaction_status::{
         option_serializer::OptionSerializer, InnerInstruction, InnerInstructions, Reward,
         TransactionStatusMeta, TransactionTokenBalance, UiInstruction, UiLoadedAddresses,
         UiTransactionStatusMeta,
-    },
-    std::{collections::HashSet, str::FromStr, sync::Arc},
+    }, std::{collections::HashSet, str::FromStr, sync::Arc}
 };
 
 /// Extracts instructions with metadata from a transaction update.
@@ -93,6 +93,21 @@ pub fn extract_instructions_with_metadata(
             );
         }
         VersionedMessage::V0(v0) => {
+            let reserved_account_keys = ReservedAccountKeys::new_all_activated();
+            let loaded_message = LoadedMessage::new_borrowed(
+                v0,
+                &meta.loaded_addresses,
+                &reserved_account_keys.active,
+            );
+            let writable_keys: Vec<Pubkey> = loaded_message
+                .account_keys()
+                .iter()
+                .enumerate()
+                .filter(|(i, _key)| loaded_message.is_writable(*i))
+                .map(|(_i, key)| *key)
+                .collect();
+            // println!("{} {:?}\n{:?}\n{:?}", transaction_metadata.slot, transaction_metadata.signature, loaded_message.account_keys(), loaded_message.is_writable_account_cache);
+        
             let mut account_keys: Vec<Pubkey> = Vec::with_capacity(
                 v0.account_keys.len()
                     + meta.loaded_addresses.writable.len()
@@ -109,7 +124,7 @@ pub fn extract_instructions_with_metadata(
                 &meta.inner_instructions,
                 transaction_metadata,
                 &mut instructions_with_metadata,
-                |key, _| meta.loaded_addresses.writable.contains(key),
+                |key, _| writable_keys.contains(key),
                 |_, idx| idx < v0.header.num_required_signatures as usize,
             );
         }
@@ -150,6 +165,15 @@ fn process_instructions<F1, F2>(
 
                     for inner_inst in &inner_tx.instructions {
                         let stack_height = inner_inst.stack_height.unwrap_or(1) as usize;
+                        if stack_height > MAX_INSTRUCTION_STACK_DEPTH {
+                            log::error!(
+                                "Instruction stack height {} exceeds maximum of {}. Sig: {:?}",
+                                stack_height,
+                                MAX_INSTRUCTION_STACK_DEPTH,
+                                transaction_metadata.signature
+                            );
+                            break;
+                        }
                         if stack_height > prev_height {
                             path_stack[stack_height - 1] = 0;
                         } else {
