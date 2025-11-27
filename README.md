@@ -120,16 +120,19 @@ carbon-cli scaffold [OPTIONS]
 #### Examples
 
 **Generate decoder from Anchor IDL:**
+
 ```sh
 carbon-cli parse --idl my_program.json --out-dir ./src/decoders
 ```
 
 **Generate decoder from program address:**
+
 ```sh
 carbon-cli parse --idl LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo -u mainnet-beta --out-dir ./desired-folder
 ```
 
 **Scaffold project using IDL file:**
+
 ```sh
 carbon-cli scaffold --name my-project --out-dir ./desired-folder --idl ./idl.json --data-source yellowstone-grpc
 ```
@@ -234,6 +237,7 @@ Decoders for most popular Solana programs are published and maintained:
 | `carbon-okx-dex-decoder`                   | OKX DEX Decoder                           | 6m2CDdhRgxpH4WjvdzxAYbGxwdGUz5MziiL5jek2kBma |
 | `carbon-openbook-v2-decoder`               | Openbook V2 Program Decoder               | opnb2LAfJYbRMAHHvqjCwQxanZn7ReEHp1k81EohpZb  |
 | `carbon-orca-whirlpool-decoder`            | Orca Whirlpool Program Decoder            | whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc  |
+| `carbon-pancake-swap-decoder`              | Pancake Swap Program Decoder              | HpNfyc2Saw7RKkQd8nEL4khUcuPhQ7WwY1B2qjx8jxFq |
 | `carbon-phoenix-v1-decoder`                | Phoenix V1 Program Decoder                | PhoeNiXZ8ByJGLkxNfZRnkUfjvmuYqLR89jjFHGqdXY  |
 | `carbon-pumpfun-decoder`                   | Pumpfun Program Decoder                   | 6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P  |
 | `carbon-pump-swap-decoder`                 | PumpSwap Program Decoder                  | pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA  |
@@ -249,6 +253,7 @@ Decoders for most popular Solana programs are published and maintained:
 | `carbon-stabble-stable-swap-decoder`       | Stabble Stable Swap Decoder               | swapNyd8XiQwJ6ianp9snpu4brUqFxadzvHebnAXjJZ  |
 | `carbon-stabble-weighted-swap-decoder`     | Stabble Weighted Swap Decoder             | swapFpHZwjELNnjvThjajtiVmkz3yPQEHjLtka2fwHW  |
 | `carbon-stake-program-decoder`             | Stake Program Decoder                     | Stake11111111111111111111111111111111111111  |
+| `carbon-swig-decoder`                      | Swig Decoder                              | swigypWHEksbC64pWKwah1WTeh9JXwx8H1rJHLdbQMB  |
 | `carbon-system-program-decoder`            | System Program Decoder                    | 11111111111111111111111111111111             |
 | `carbon-token-2022-decoder`                | Token 2022 Program Decoder                | TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb  |
 | `carbon-token-program-decoder`             | Token Program Decoder                     | TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA  |
