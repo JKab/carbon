@@ -106,9 +106,7 @@ impl TryFrom<crate::datasource::TransactionUpdate> for TransactionMetadata {
         Ok(TransactionMetadata {
             slot: value.slot,
             signature: value.signature,
-            fee_payer: *accounts
-                .first()
-                .ok_or(crate::error::Error::MissingFeePayer)?,
+            fee_payer: *accounts.first().ok_or(crate::error::Error::MissingFeePayer)?,
             meta: value.meta.clone(),
             message: value.transaction.message.clone(),
             block_time: value.block_time,
@@ -181,10 +179,7 @@ impl<T: InstructionDecoderCollection, U> TransactionPipe<T, U> {
     /// processor.
     pub fn new(
         schema: Option<TransactionSchema<T>>,
-        processor: impl Processor<InputType = TransactionProcessorInputType<T, U>>
-            + Send
-            + Sync
-            + 'static,
+        processor: impl Processor<InputType = TransactionProcessorInputType<T, U>> + Send + Sync + 'static,
         filters: Vec<Box<dyn Filter + Send + Sync + 'static>>,
     ) -> Self {
         log::trace!(
@@ -296,26 +291,17 @@ where
         instructions: &[NestedInstruction],
         metrics: Arc<MetricsCollection>,
     ) -> CarbonResult<()> {
-        log::trace!(
-            "TransactionPipe::run(instructions: {:?}, metrics)",
-            instructions,
-        );
+        log::trace!("TransactionPipe::run(instructions: {:?}, metrics)", instructions,);
 
         let parsed_instructions = parse_instructions(instructions);
 
         let matched_data = self.matches_schema(&parsed_instructions);
 
-        let unnested_instructions = transformers::unnest_parsed_instructions(
-            transaction_metadata.clone(),
-            parsed_instructions,
-            0,
-        );
+        let unnested_instructions =
+            transformers::unnest_parsed_instructions(transaction_metadata.clone(), parsed_instructions, 0);
 
         self.processor
-            .process(
-                (transaction_metadata, unnested_instructions, matched_data),
-                metrics,
-            )
+            .process((transaction_metadata, unnested_instructions, matched_data), metrics)
             .await?;
 
         Ok(())

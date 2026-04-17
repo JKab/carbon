@@ -55,9 +55,7 @@ use crate::datasource::{BlockDetails, DatasourceId};
 use crate::filter::Filter;
 use {
     crate::{
-        account::{
-            AccountDecoder, AccountMetadata, AccountPipe, AccountPipes, AccountProcessorInputType,
-        },
+        account::{AccountDecoder, AccountMetadata, AccountPipe, AccountPipes, AccountProcessorInputType},
         account_deletion::{AccountDeletionPipe, AccountDeletionPipes},
         collection::InstructionDecoderCollection,
         datasource::{AccountDeletion, Datasource, Update},
@@ -342,10 +340,7 @@ impl Pipeline {
         let (update_sender, mut update_receiver) =
             tokio::sync::mpsc::channel::<(Update, DatasourceId)>(self.channel_buffer_size);
 
-        let datasource_cancellation_token = self
-            .datasource_cancellation_token
-            .clone()
-            .unwrap_or_default();
+        let datasource_cancellation_token = self.datasource_cancellation_token.clone().unwrap_or_default();
 
         for datasource in &self.datasources {
             let datasource_cancellation_token_clone = datasource_cancellation_token.clone();
@@ -371,9 +366,7 @@ impl Pipeline {
 
         drop(update_sender);
 
-        let mut interval = tokio::time::interval(time::Duration::from_secs(
-            self.metrics_flush_interval.unwrap_or(5),
-        ));
+        let mut interval = tokio::time::interval(time::Duration::from_secs(self.metrics_flush_interval.unwrap_or(5)));
 
         loop {
             tokio::select! {
@@ -528,13 +521,11 @@ impl Pipeline {
                 };
 
                 for pipe in self.account_pipes.iter_mut() {
-                    if pipe.filters().iter().all(|filter| {
-                        filter.filter_account(
-                            &datasource_id,
-                            &account_metadata,
-                            &account_update.account,
-                        )
-                    }) {
+                    if pipe
+                        .filters()
+                        .iter()
+                        .all(|filter| filter.filter_account(&datasource_id, &account_metadata, &account_update.account))
+                    {
                         pipe.run(
                             (account_metadata.clone(), account_update.account.clone()),
                             self.metrics.clone(),
@@ -543,26 +534,23 @@ impl Pipeline {
                     }
                 }
 
-                self.metrics
-                    .increment_counter("account_updates_processed", 1)
-                    .await?;
+                self.metrics.increment_counter("account_updates_processed", 1).await?;
             }
             Update::Transaction(transaction_update) => {
                 let transaction_metadata = Arc::new((*transaction_update).clone().try_into()?);
 
                 let instructions_with_metadata: InstructionsWithMetadata =
-                    transformers::extract_instructions_with_metadata(
-                        &transaction_metadata,
-                        &transaction_update,
-                    )?;
+                    transformers::extract_instructions_with_metadata(&transaction_metadata, &transaction_update)?;
 
                 let nested_instructions: NestedInstructions = instructions_with_metadata.into();
 
                 for pipe in self.instruction_pipes.iter_mut() {
                     for nested_instruction in nested_instructions.iter() {
-                        if pipe.filters().iter().all(|filter| {
-                            filter.filter_instruction(&datasource_id, nested_instruction)
-                        }) {
+                        if pipe
+                            .filters()
+                            .iter()
+                            .all(|filter| filter.filter_instruction(&datasource_id, nested_instruction))
+                        {
                             pipe.run(nested_instruction, self.metrics.clone()).await?;
                         }
                     }
@@ -570,18 +558,10 @@ impl Pipeline {
 
                 for pipe in self.transaction_pipes.iter_mut() {
                     if pipe.filters().iter().all(|filter| {
-                        filter.filter_transaction(
-                            &datasource_id,
-                            &transaction_metadata,
-                            &nested_instructions,
-                        )
+                        filter.filter_transaction(&datasource_id, &transaction_metadata, &nested_instructions)
                     }) {
-                        pipe.run(
-                            transaction_metadata.clone(),
-                            &nested_instructions,
-                            self.metrics.clone(),
-                        )
-                        .await?;
+                        pipe.run(transaction_metadata.clone(), &nested_instructions, self.metrics.clone())
+                            .await?;
                     }
                 }
 
@@ -591,17 +571,16 @@ impl Pipeline {
             }
             Update::AccountDeletion(account_deletion) => {
                 for pipe in self.account_deletion_pipes.iter_mut() {
-                    if pipe.filters().iter().all(|filter| {
-                        filter.filter_account_deletion(&datasource_id, &account_deletion)
-                    }) {
-                        pipe.run(account_deletion.clone(), self.metrics.clone())
-                            .await?;
+                    if pipe
+                        .filters()
+                        .iter()
+                        .all(|filter| filter.filter_account_deletion(&datasource_id, &account_deletion))
+                    {
+                        pipe.run(account_deletion.clone(), self.metrics.clone()).await?;
                     }
                 }
 
-                self.metrics
-                    .increment_counter("account_deletions_processed", 1)
-                    .await?;
+                self.metrics.increment_counter("account_deletions_processed", 1).await?;
             }
             Update::BlockDetails(block_details) => {
                 for pipe in self.block_details_pipes.iter_mut() {
@@ -610,14 +589,11 @@ impl Pipeline {
                         .iter()
                         .all(|filter| filter.filter_block_details(&datasource_id, &block_details))
                     {
-                        pipe.run(block_details.clone(), self.metrics.clone())
-                            .await?;
+                        pipe.run(block_details.clone(), self.metrics.clone()).await?;
                     }
                 }
 
-                self.metrics
-                    .increment_counter("block_details_processed", 1)
-                    .await?;
+                self.metrics.increment_counter("block_details_processed", 1).await?;
             }
         };
 
@@ -786,11 +762,7 @@ impl PipelineBuilder {
     /// let builder = PipelineBuilder::new()
     ///     .datasource_with_id(mainnet_id, MyDatasource::new());
     /// ```
-    pub fn datasource_with_id(
-        mut self,
-        datasource: impl Datasource + 'static,
-        id: DatasourceId,
-    ) -> Self {
+    pub fn datasource_with_id(mut self, datasource: impl Datasource + 'static, id: DatasourceId) -> Self {
         log::trace!(
             "datasource_with_id(self, id: {:?}, datasource: {:?})",
             id,
@@ -824,10 +796,7 @@ impl PipelineBuilder {
     ///   sources first and allow the pipeline to finish processing any updates
     ///   that are still pending.
     pub fn shutdown_strategy(mut self, shutdown_strategy: ShutdownStrategy) -> Self {
-        log::trace!(
-            "shutdown_strategy(self, shutdown_strategy: {:?})",
-            shutdown_strategy
-        );
+        log::trace!("shutdown_strategy(self, shutdown_strategy: {:?})", shutdown_strategy);
         self.shutdown_strategy = shutdown_strategy;
         self
     }
@@ -940,15 +909,11 @@ impl PipelineBuilder {
         mut self,
         processor: impl Processor<InputType = AccountDeletion> + Send + Sync + 'static,
     ) -> Self {
-        log::trace!(
-            "account_deletions(self, processor: {:?})",
-            stringify!(processor)
-        );
-        self.account_deletion_pipes
-            .push(Box::new(AccountDeletionPipe {
-                processor: Box::new(processor),
-                filters: vec![],
-            }));
+        log::trace!("account_deletions(self, processor: {:?})", stringify!(processor));
+        self.account_deletion_pipes.push(Box::new(AccountDeletionPipe {
+            processor: Box::new(processor),
+            filters: vec![],
+        }));
         self
     }
 
@@ -991,11 +956,10 @@ impl PipelineBuilder {
             stringify!(processor),
             stringify!(filters)
         );
-        self.account_deletion_pipes
-            .push(Box::new(AccountDeletionPipe {
-                processor: Box::new(processor),
-                filters,
-            }));
+        self.account_deletion_pipes.push(Box::new(AccountDeletionPipe {
+            processor: Box::new(processor),
+            filters,
+        }));
         self
     }
 
@@ -1020,10 +984,7 @@ impl PipelineBuilder {
         mut self,
         processor: impl Processor<InputType = BlockDetails> + Send + Sync + 'static,
     ) -> Self {
-        log::trace!(
-            "block_details(self, processor: {:?})",
-            stringify!(processor)
-        );
+        log::trace!("block_details(self, processor: {:?})", stringify!(processor));
         self.block_details_pipes.push(Box::new(BlockDetailsPipe {
             processor: Box::new(processor),
             filters: vec![],
@@ -1187,10 +1148,7 @@ impl PipelineBuilder {
     /// ```
     pub fn transaction<T, U>(
         mut self,
-        processor: impl Processor<InputType = TransactionProcessorInputType<T, U>>
-            + Send
-            + Sync
-            + 'static,
+        processor: impl Processor<InputType = TransactionProcessorInputType<T, U>> + Send + Sync + 'static,
         schema: Option<TransactionSchema<T>>,
     ) -> Self
     where
@@ -1203,11 +1161,7 @@ impl PipelineBuilder {
             stringify!(processor)
         );
         self.transaction_pipes
-            .push(Box::new(TransactionPipe::<T, U>::new(
-                schema,
-                processor,
-                vec![],
-            )));
+            .push(Box::new(TransactionPipe::<T, U>::new(schema, processor, vec![])));
         self
     }
 
@@ -1244,10 +1198,7 @@ impl PipelineBuilder {
     /// ```
     pub fn transaction_with_filters<T, U>(
         mut self,
-        processor: impl Processor<InputType = TransactionProcessorInputType<T, U>>
-            + Send
-            + Sync
-            + 'static,
+        processor: impl Processor<InputType = TransactionProcessorInputType<T, U>> + Send + Sync + 'static,
         schema: Option<TransactionSchema<T>>,
         filters: Vec<Box<dyn Filter + Send + Sync + 'static>>,
     ) -> Self
@@ -1262,9 +1213,7 @@ impl PipelineBuilder {
             stringify!(filters)
         );
         self.transaction_pipes
-            .push(Box::new(TransactionPipe::<T, U>::new(
-                schema, processor, filters,
-            )));
+            .push(Box::new(TransactionPipe::<T, U>::new(schema, processor, filters)));
         self
     }
 
